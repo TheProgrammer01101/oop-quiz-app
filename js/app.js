@@ -2,7 +2,6 @@ import Question from "./Question.js";
 import Quiz from "./Quiz.js";
 
 const App = (() => {
-  const quizElement = document.querySelector('.quiz');
   const quizQuestionElement = document.querySelector('.question');
   const trackerElement = document.querySelector('.tracker');
   const taglineElement = document.querySelector('.tagline');
@@ -26,6 +25,24 @@ const App = (() => {
 
   const quiz = new Quiz([q1, q2, q3]);
   
+  nextButtonElement.addEventListener('click', ()=> {
+    try {
+      const checkedInputIndex = document.querySelector('input:checked').dataset.index;
+      quiz.guess(checkedInputIndex);
+      renderAll();
+    }
+    catch {
+      
+    }
+  });
+
+  restartButtonElement.addEventListener('click', ()=> {
+    quiz.reset();
+    nextButtonElement.style.opacity = '1';
+    taglineElement.textContent = 'Pick an option below!';
+    renderAll();
+  })
+
   const renderQuestion = () => {
     const question = quiz.getCurrentQuestion().question;
     quizQuestionElement.textContent = question;
@@ -33,10 +50,11 @@ const App = (() => {
 
   const renderChoices = () => {
     const choices = quiz.getCurrentQuestion().choices;
+    let markup = ''
     choices.forEach((choice, index) => {
-      choicesElements.innerHTML += `
+      markup += `
       <li class="choice">
-        <input type="radio" name="choice" class="input" id="choice${index}">
+        <input type="radio" name="choice" class="input" data-index=${index} id="choice${index}">
         <label for="choice${index}" class="label">
           <i></i>
           ${choice}
@@ -44,19 +62,34 @@ const App = (() => {
       </li>
       `
     });
+    choicesElements.innerHTML = markup;
   }
 
   const renderTracker = () => {
     trackerElement.textContent = `${quiz.currentIndex + 1} of ${quiz.questions.length}`;
   }
 
+  const renderProgress = () => {
+    const progress = Math.round((quiz.currentIndex / quiz.questions.length) * 100);
+    progressInnerElement.style.width = `${progress}%`;
+  }
+
+  const renderEndScreen = () => {
+    renderProgress();
+    const scorePercentage = Math.round((quiz.score / quiz.questions.length) * 100);
+    taglineElement.textContent = 'Complete!'
+    trackerElement.textContent = `Your score: ${scorePercentage}%`;
+    nextButtonElement.style.opacity = '0';
+  }
+
   const renderAll = () => {
     if(quiz.hasEnded()) {
-
+      renderEndScreen();
     } else {
       renderQuestion();
       renderChoices();
       renderTracker();
+      renderProgress();
     }
   }
   return {
